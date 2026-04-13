@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -184,7 +185,10 @@ func (h *Handler) OAuthCallback(c *gin.Context) {
 	code := c.Query("code")
 	stateStr := c.Query("state")
 
+	log.Printf("[OAuth Callback] Received callback: code=%s... state=%s", code[:min(len(code), 10)], stateStr)
+
 	if code == "" || stateStr == "" {
+		log.Printf("[OAuth Callback] ERROR: missing code or state, code=%q state=%q", code, stateStr)
 		c.Redirect(http.StatusTemporaryRedirect, "/?error=missing_code")
 		return
 	}
@@ -197,9 +201,11 @@ func (h *Handler) OAuthCallback(c *gin.Context) {
 		stateStr,
 	).Scan(&st.State, &st.ProviderID, &userIDNull, &st.Action, &st.RedirectURL)
 	if err != nil {
+		log.Printf("[OAuth Callback] ERROR: invalid state %q: %v", stateStr, err)
 		c.Redirect(http.StatusTemporaryRedirect, "/?error=invalid_state")
 		return
 	}
+	log.Printf("[OAuth Callback] State valid: provider_id=%d action=%s", st.ProviderID, st.Action)
 	if userIDNull.Valid {
 		uid := userIDNull.Int64
 		st.UserID = &uid
@@ -217,30 +223,43 @@ func (h *Handler) OAuthCallback(c *gin.Context) {
 		st.ProviderID,
 	).Scan(&p.ID, &p.Name, &p.ClientID, &p.ClientSecret, &p.TokenURL, &p.UserinfoURL)
 	if err != nil {
+		log.Printf("[OAuth Callback] ERROR: provider not found for id=%d: %v", st.ProviderID, err)
 		c.Redirect(http.StatusTemporaryRedirect, "/?error=provider_not_found")
 		return
 	}
+	log.Printf("[OAuth Callback] Provider: %s (id=%d), token_url=%s, userinfo_url=%s", p.Name, p.ID, p.TokenURL, p.UserinfoURL)
 
 	// Exchange code for token
 	callbackURL := fmt.Sprintf("%s/api/auth/%s/callback", h.baseURL(), p.Name)
+	log.Printf("[OAuth Callback] Exchanging code for token, callback_url=%s", callbackURL)
 	tokenResp, err := exchangeCode(p, code, callbackURL)
 	if err != nil {
+		log.Printf("[OAuth Callback] ERROR: token exchange failed: %v", err)
 		c.Redirect(http.StatusTemporaryRedirect, "/?error=token_exchange_failed")
 		return
 	}
+	log.Printf("[OAuth Callback] Token exchange success: access_token=%s... refresh_token=%v expires_in=%d scope=%s",
+		tokenResp.AccessToken[:min(len(tokenResp.AccessToken), 10)],
+		tokenResp.RefreshToken != "",
+		tokenResp.ExpiresIn,
+		tokenResp.Scope)
 
 	// Fetch userinfo
+	log.Printf("[OAuth Callback] Fetching userinfo from %s", p.UserinfoURL)
 	userinfo, err := fetchUserinfo(p.UserinfoURL, tokenResp.AccessToken)
 	if err != nil {
+		log.Printf("[OAuth Callback] ERROR: userinfo fetch failed: %v", err)
 		c.Redirect(http.StatusTemporaryRedirect, "/?error=userinfo_failed")
 		return
 	}
+	log.Printf("[OAuth Callback] Userinfo received: %v", userinfo)
 
 	// Extract common fields
 	providerUserID := extractField(userinfo, "id", "sub", "user_id")
 	providerEmail := extractField(userinfo, "email")
 	providerName := extractField(userinfo, "name", "login", "display_name", "nickname")
 	providerAvatar := extractField(userinfo, "avatar_url", "picture", "avatar")
+	log.Printf("[OAuth Callback] Extracted: user_id=%s email=%s name=%s", providerUserID, providerEmail, providerName)
 
 	rawJSON, _ := json.Marshal(userinfo)
 
@@ -260,6 +279,7 @@ func (h *Handler) OAuthCallback(c *gin.Context) {
 	}
 
 	if st.Action == "link" && st.UserID != nil {
+		log.Printf("[OAuth Callback] Linking to existing user_id=%d", *st.UserID)
 		// Link account to existing user
 		_, err = h.db.Exec(`
 			INSERT INTO linked_accounts (user_id, provider_id, provider_user_id, provider_email, provider_name, provider_avatar,
@@ -276,14 +296,17 @@ func (h *Handler) OAuthCallback(c *gin.Context) {
 			scopesGranted, tokenResp.RawJSON, string(rawJSON), time.Now(),
 		)
 		if err != nil {
+			log.Printf("[OAuth Callback] ERROR: link account failed: %v", err)
 			c.Redirect(http.StatusTemporaryRedirect, "/accounts?error=link_failed")
 			return
 		}
+		log.Printf("[OAuth Callback] Account linked successfully")
 		c.Redirect(http.StatusTemporaryRedirect, "/accounts?linked=true")
 		return
 	}
 
 	// Login or register flow
+	log.Printf("[OAuth Callback] Login/register flow: checking existing linked account")
 	// Check if this provider account is already linked
 	var existingUserID int64
 	err = h.db.QueryRow(
@@ -295,6 +318,7 @@ func (h *Handler) OAuthCallback(c *gin.Context) {
 
 	if err == nil {
 		// Existing linked account — load user
+		log.Printf("[OAuth Callback] Found existing linked account, user_id=%d", existingUserID)
 		h.db.QueryRow("SELECT id, email, display_name, avatar_url, role FROM users WHERE id = ?", existingUserID).
 			Scan(&user.ID, &user.Email, &user.DisplayName, &user.AvatarURL, &user.Role)
 
@@ -307,6 +331,7 @@ func (h *Handler) OAuthCallback(c *gin.Context) {
 			p.ID, providerUserID,
 		)
 	} else {
+		log.Printf("[OAuth Callback] No existing linked account, trying email match: %s", providerEmail)
 		// Try to find user by email, or create new user
 		if providerEmail != "" {
 			err = h.db.QueryRow("SELECT id, email, display_name, avatar_url, role FROM users WHERE email = ?", providerEmail).
@@ -314,6 +339,7 @@ func (h *Handler) OAuthCallback(c *gin.Context) {
 		}
 
 		if user.ID == 0 {
+			log.Printf("[OAuth Callback] No email match, creating new user")
 			// Create new user
 			displayName := providerName
 			if displayName == "" {
@@ -324,10 +350,12 @@ func (h *Handler) OAuthCallback(c *gin.Context) {
 				providerEmail, displayName, providerAvatar, time.Now(),
 			)
 			if err != nil {
+				log.Printf("[OAuth Callback] ERROR: create user failed: %v", err)
 				c.Redirect(http.StatusTemporaryRedirect, "/?error=create_user_failed")
 				return
 			}
 			user.ID, _ = result.LastInsertId()
+			log.Printf("[OAuth Callback] New user created: id=%d email=%s", user.ID, providerEmail)
 			user.Email = providerEmail
 			user.DisplayName = displayName
 			user.AvatarURL = providerAvatar
@@ -345,8 +373,10 @@ func (h *Handler) OAuthCallback(c *gin.Context) {
 	}
 
 	// Generate JWT
+	log.Printf("[OAuth Callback] Generating JWT for user: id=%d email=%s role=%s", user.ID, user.Email, user.Role)
 	tokenString, err := h.generateToken(&user)
 	if err != nil {
+		log.Printf("[OAuth Callback] ERROR: JWT generation failed: %v", err)
 		c.Redirect(http.StatusTemporaryRedirect, "/?error=token_generation_failed")
 		return
 	}
