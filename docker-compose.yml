@@ -8,35 +8,12 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - oauth-data:/app/data
+      - ./oauth-data:/app/data
     environment:
       - PORT=8080
       - BASE_URL=${BASE_URL:-http://localhost:8080}
       - JWT_SECRET=${JWT_SECRET:-please-change-this-secret}
       - GIN_MODE=release
-    networks:
-      - web
-
-  # Optional: Nginx reverse proxy with SSL
-  nginx:
-    image: nginx:alpine
-    container_name: oauth-nginx
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./docker/certs:/etc/nginx/certs:ro
-    depends_on:
-      - oauth-client
-    networks:
-      - web
-    profiles:
-      - with-nginx
 
 volumes:
   oauth-data:
-
-networks:
-  web:
