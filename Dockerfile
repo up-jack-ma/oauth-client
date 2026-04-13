@@ -17,9 +17,8 @@ FROM golang:1.22-alpine AS backend-builder
 RUN apk add --no-cache gcc musl-dev sqlite-dev
 
 WORKDIR /app/backend
-COPY backend/go.mod backend/go.sum* ./
-RUN go mod download 2>/dev/null || true
 COPY backend/ ./
+RUN go mod tidy && go mod download
 
 # Build with CGO for SQLite, static link, strip debug info
 RUN CGO_ENABLED=1 GOOS=linux go build \
