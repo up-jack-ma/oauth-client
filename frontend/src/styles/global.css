@@ -540,6 +540,63 @@ th {
   color: var(--text);
 }
 
+/* Callback URL display */
+.callback-url-box {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+}
+.callback-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #166534;
+  margin-bottom: 6px;
+}
+.callback-value {
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 13px;
+  color: #166534;
+  word-break: break-all;
+  cursor: pointer;
+  padding: 6px 10px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #bbf7d0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+.callback-value:hover {
+  border-color: #166534;
+}
+.callback-value.copied {
+  border-color: #166534;
+  background: #dcfce7;
+}
+.copy-hint {
+  font-size: 11px;
+  color: #6b7280;
+  white-space: nowrap;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+.callback-value.copied .copy-hint::after {
+  content: ' Copied!';
+  color: #166534;
+}
+
+.callback-cell {
+  cursor: pointer;
+  color: var(--primary);
+  transition: opacity 0.2s;
+}
+.callback-cell:hover {
+  opacity: 0.7;
+}
+
 .flex { display: flex; }
 .items-center { align-items: center; }
 .gap-2 { gap: 8px; }

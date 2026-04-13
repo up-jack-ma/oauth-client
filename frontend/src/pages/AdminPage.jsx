@@ -192,7 +192,7 @@ export default function AdminPage() {
               <thead>
                 <tr>
                   <th>Provider</th>
-                  <th>Client ID</th>
+                  <th>Callback URL</th>
                   <th>Status</th>
                   <th>Actions</th>
                 </tr>
@@ -209,7 +209,14 @@ export default function AdminPage() {
                         </div>
                       </div>
                     </td>
-                    <td><code className="text-sm">{p.client_id.substring(0, 20)}...</code></td>
+                    <td>
+                      <code className="text-sm callback-cell" onClick={() => {
+                        navigator.clipboard.writeText(`${window.location.origin}/api/auth/${p.name}/callback`)
+                        showMsg('Callback URL copied!')
+                      }} title="Click to copy">
+                        /api/auth/{p.name}/callback
+                      </code>
+                    </td>
                     <td>
                       <span className={`badge ${p.enabled ? 'badge-enabled' : 'badge-disabled'}`}>
                         {p.enabled ? 'Enabled' : 'Disabled'}
@@ -293,6 +300,20 @@ export default function AdminPage() {
                   placeholder="GitHub" />
               </div>
             </div>
+
+            {form.name && (
+              <div className="callback-url-box">
+                <div className="callback-label">Callback URL (fill this in the OAuth provider's settings)</div>
+                <div className="callback-value" onClick={e => {
+                  navigator.clipboard.writeText(`${window.location.origin}/api/auth/${form.name}/callback`)
+                  e.target.classList.add('copied')
+                  setTimeout(() => e.target.classList.remove('copied'), 1500)
+                }}>
+                  {window.location.origin}/api/auth/{form.name}/callback
+                  <span className="copy-hint">Click to copy</span>
+                </div>
+              </div>
+            )}
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <div className="form-group">
