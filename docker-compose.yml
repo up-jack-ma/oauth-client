@@ -1,12 +1,10 @@
-version: '3.8'
-
 services:
   oauth-client:
     build: .
     container_name: oauth-client
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "3007:8080"
     volumes:
       - ./oauth-data:/app/data
     environment:
