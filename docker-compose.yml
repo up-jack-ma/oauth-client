@@ -1,6 +1,7 @@
 services:
   oauth-client:
     build: .
+    image: oauth-client:1.0.0
     container_name: oauth-client
     restart: unless-stopped
     ports:
