@@ -351,13 +351,16 @@ func (h *Handler) OAuthCallback(c *gin.Context) {
 		return
 	}
 
-	// Set cookie and redirect
-	c.SetCookie("token", tokenString, 3*24*3600, "/", "", false, false)
+	// Redirect with token in URL parameter
 	redirect := st.RedirectURL
 	if redirect == "" {
 		redirect = "/accounts"
 	}
-	c.Redirect(http.StatusTemporaryRedirect, redirect)
+	separator := "?"
+	if strings.Contains(redirect, "?") {
+		separator = "&"
+	}
+	c.Redirect(http.StatusTemporaryRedirect, redirect+separator+"token="+tokenString)
 }
 
 type tokenResponse struct {

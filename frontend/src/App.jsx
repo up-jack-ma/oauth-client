@@ -15,33 +15,32 @@ function App() {
   const location = useLocation()
 
   useEffect(() => {
-    // Sync: if token is in cookie but not in localStorage, extract it
-    let token = api.getToken()
+    // Check URL params first (from OAuth callback redirect)
+    let token = new URLSearchParams(location.search).get('token')
+    if (token) {
+      api.setToken(token)
+      // Clean token from URL without reload
+      window.history.replaceState({}, '', location.pathname)
+    }
+
+    // Fallback to localStorage
     if (!token) {
-      const match = document.cookie.match(/(?:^|;\s*)token=([^;]+)/)
-      if (match) {
-        token = match[1]
-        api.setToken(token)
-      }
+      token = api.getToken()
     }
 
     if (token) {
       api.getMe()
         .then(u => setUser(u))
-        .catch(() => {
-          api.clearToken()
-          document.cookie = 'token=; max-age=0; path=/'
-        })
+        .catch(() => { api.clearToken() })
         .finally(() => setLoading(false))
     } else {
       setLoading(false)
     }
-  }, [location.pathname])
+  }, [location.pathname, location.search])
 
   const logout = () => {
     api.logout().finally(() => {
       setUser(null)
-      document.cookie = 'token=; max-age=0; path=/'
       navigate('/')
     })
   }
