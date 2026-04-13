@@ -38,22 +38,22 @@ type PublicProvider struct {
 }
 
 type LinkedAccount struct {
-	ID                  int64      `json:"id"`
-	UserID              int64      `json:"user_id"`
-	ProviderID          int64      `json:"provider_id"`
-	ProviderUserID      string     `json:"provider_user_id"`
-	ProviderEmail       string     `json:"provider_email"`
-	ProviderName        string     `json:"provider_name"`
-	ProviderAvatar      string     `json:"provider_avatar"`
-	AccessToken         string     `json:"access_token"`
-	RefreshToken        string     `json:"refresh_token"`
-	TokenExpiry         *time.Time `json:"token_expiry"`
-	RefreshTokenExpiry  *time.Time `json:"refresh_token_expiry"`
-	ScopesGranted       string     `json:"scopes_granted"`
-	RawTokenResponse    string     `json:"raw_token_response"`
-	RawUserinfo         string     `json:"-"`
-	CreatedAt           time.Time  `json:"created_at"`
-	UpdatedAt           time.Time  `json:"updated_at"`
+	ID                 int64      `json:"id"`
+	UserID             int64      `json:"user_id"`
+	ProviderID         int64      `json:"provider_id"`
+	ProviderUserID     string     `json:"provider_user_id"`
+	ProviderEmail      string     `json:"provider_email"`
+	ProviderName       string     `json:"provider_name"`
+	ProviderAvatar     string     `json:"provider_avatar"`
+	AccessToken        string     `json:"access_token"`
+	RefreshToken       string     `json:"refresh_token"`
+	TokenExpiry        *time.Time `json:"token_expiry"`
+	RefreshTokenExpiry *time.Time `json:"refresh_token_expiry"`
+	ScopesGranted      string     `json:"scopes_granted"`
+	RawTokenResponse   string     `json:"raw_token_response"`
+	RawUserinfo        string     `json:"raw_userinfo"`
+	CreatedAt          time.Time  `json:"created_at"`
+	UpdatedAt          time.Time  `json:"updated_at"`
 
 	// Joined fields
 	ProviderDisplayName string `json:"provider_display_name,omitempty"`

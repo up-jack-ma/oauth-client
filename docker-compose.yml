@@ -12,3 +12,5 @@ services:
       - BASE_URL=${BASE_URL:-http://localhost:8080}
       - JWT_SECRET=${JWT_SECRET:-please-change-this-secret}
       - GIN_MODE=release
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-admin@example.com}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}

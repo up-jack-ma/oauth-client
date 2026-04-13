@@ -586,7 +586,7 @@ func (h *Handler) ListLinkedAccounts(c *gin.Context) {
 	rows, err := h.db.Query(`
 		SELECT la.id, la.provider_id, la.provider_user_id, la.provider_email, la.provider_name,
 			la.provider_avatar, la.access_token, la.refresh_token, la.token_expiry, la.refresh_token_expiry,
-			la.scopes_granted, la.raw_token_response, la.created_at, la.updated_at,
+			la.scopes_granted, la.raw_token_response, la.raw_userinfo, la.created_at, la.updated_at,
 			op.display_name, op.icon
 		FROM linked_accounts la
 		JOIN oauth_providers op ON la.provider_id = op.id
@@ -606,7 +606,7 @@ func (h *Handler) ListLinkedAccounts(c *gin.Context) {
 		var tokenExpiry, refreshExpiry sql.NullTime
 		if err := rows.Scan(&a.ID, &a.ProviderID, &a.ProviderUserID, &a.ProviderEmail, &a.ProviderName,
 			&a.ProviderAvatar, &a.AccessToken, &a.RefreshToken, &tokenExpiry, &refreshExpiry,
-			&a.ScopesGranted, &a.RawTokenResponse, &a.CreatedAt, &a.UpdatedAt,
+			&a.ScopesGranted, &a.RawTokenResponse, &a.RawUserinfo, &a.CreatedAt, &a.UpdatedAt,
 			&a.ProviderDisplayName, &a.ProviderIcon); err != nil {
 			continue
 		}

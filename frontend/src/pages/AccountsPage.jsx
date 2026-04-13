@@ -241,6 +241,33 @@ export default function AccountsPage() {
                       </div>
                     </div>
 
+                    {/* OAuth User Info */}
+                    {account.raw_userinfo && account.raw_userinfo !== '{}' && (() => {
+                      let info = {}
+                      try { info = JSON.parse(account.raw_userinfo) } catch {}
+                      const entries = Object.entries(info)
+                      if (entries.length === 0) return null
+                      return (
+                        <div className="token-field" style={{ gridColumn: '1 / -1' }}>
+                          <div className="token-label">User Info (from {account.provider_display_name})</div>
+                          <div className="userinfo-table-wrap">
+                            <table className="userinfo-table">
+                              <tbody>
+                                {entries.map(([key, val]) => (
+                                  <tr key={key}>
+                                    <td className="userinfo-key">{key}</td>
+                                    <td className="userinfo-val">
+                                      {typeof val === 'object' ? JSON.stringify(val) : String(val)}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )
+                    })()}
+
                     <div className="token-field" style={{ gridColumn: '1 / -1' }}>
                       <div className="token-label">
                         Raw Token Response

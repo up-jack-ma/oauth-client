@@ -15,12 +15,23 @@ function App() {
   const location = useLocation()
 
   useEffect(() => {
-    // Check for token in URL params (from OAuth callback cookie)
-    const token = api.getToken()
-    if (token || document.cookie.includes('token=')) {
+    // Sync: if token is in cookie but not in localStorage, extract it
+    let token = api.getToken()
+    if (!token) {
+      const match = document.cookie.match(/(?:^|;\s*)token=([^;]+)/)
+      if (match) {
+        token = match[1]
+        api.setToken(token)
+      }
+    }
+
+    if (token) {
       api.getMe()
         .then(u => setUser(u))
-        .catch(() => { api.clearToken() })
+        .catch(() => {
+          api.clearToken()
+          document.cookie = 'token=; max-age=0; path=/'
+        })
         .finally(() => setLoading(false))
     } else {
       setLoading(false)

@@ -104,14 +104,23 @@ func Seed(db *sql.DB) error {
 		return nil
 	}
 
-	hash, err := bcrypt.GenerateFromPassword([]byte("admin123"), bcrypt.DefaultCost)
+	email := os.Getenv("ADMIN_EMAIL")
+	if email == "" {
+		email = "admin@example.com"
+	}
+	password := os.Getenv("ADMIN_PASSWORD")
+	if password == "" {
+		password = "admin123"
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
 
 	_, err = db.Exec(
 		"INSERT OR IGNORE INTO users (email, password_hash, display_name, role, created_at) VALUES (?, ?, ?, ?, ?)",
-		"admin@example.com", string(hash), "Admin", "admin", time.Now(),
+		email, string(hash), "Admin", "admin", time.Now(),
 	)
 	return err
 }

@@ -505,6 +505,41 @@ th {
   transform: none !important;
 }
 
+/* OAuth user info table */
+.userinfo-table-wrap {
+  max-height: 320px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-top: 6px;
+}
+.userinfo-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.userinfo-table tr:not(:last-child) td {
+  border-bottom: 1px solid var(--border);
+}
+.userinfo-table td {
+  padding: 8px 12px;
+  vertical-align: top;
+}
+.userinfo-key {
+  width: 160px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-family: monospace;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.userinfo-val {
+  word-break: break-all;
+  font-family: monospace;
+  font-size: 12px;
+  color: var(--text);
+}
+
 .flex { display: flex; }
 .items-center { align-items: center; }
 .gap-2 { gap: 8px; }
