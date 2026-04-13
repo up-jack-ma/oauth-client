@@ -41,8 +41,6 @@ COPY --from=frontend-builder /app/frontend/dist ./static
 
 RUN mkdir -p /app/data && chown -R appuser:appuser /app
 
-USER appuser
-
 EXPOSE 8080
 
 ENV GIN_MODE=release \
@@ -52,4 +50,4 @@ ENV GIN_MODE=release \
 
 VOLUME ["/app/data"]
 
-ENTRYPOINT ["./server"]
+ENTRYPOINT ["sh", "-c", "mkdir -p $(dirname $DB_PATH) && ./server"]
